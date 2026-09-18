@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restaurant Sales & Order Analytics Presentation</title>
+  <!-- Chart.js for interactive analytics visuals -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome for professional UI icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-dark: #3730a3;
+      --accent: #06b6d4;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    .presentation-container {
+      width: 95vw;
+      max-width: 1160px;
+      height: 88vh;
+      min-height: 640px;
+      position: relative;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 40px rgba(79, 70, 229, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    /* Top Bar */
+    .deck-header {
+      padding: 16px 36px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .project-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(6, 182, 212, 0.1);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+
+    .slide-counter {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+    }
+
+    /* Slides Content Stage */
+    .slides-wrapper {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      padding: 32px 48px;
+    }
+
+    .slide {
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+      height: 100%;
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Standard Slide Typography */
+    .slide-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .slide-subtitle {
+      font-size: 1rem;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+    }
+
+    /* Components */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .kpi-title {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-note {
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    .content-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+      min-height: 280px;
+    }
+
+    .chart-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .chart-box h4 {
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-canvas-wrapper {
+      flex: 1;
+      position: relative;
+      min-height: 220px;
+    }
+
+    /* Tables */
+    .data-table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    .data-table th {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px 18px;
+      font-weight: 600;
+      color: var(--text-sub);
+      border-bottom: 1px solid var(--card-border);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge-primary { background: rgba(79, 70, 229, 0.2); color: #a5b4fc; }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+    /* Insight List */
+    .insight-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .insight-icon {
+      background: rgba(79, 70, 229, 0.2);
+      color: var(--primary-light);
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .insight-body h5 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .insight-body p {
+      font-size: 0.88rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* Footer & Controls */
+    .deck-footer {
+      padding: 16px 36px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .nav-btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-light);
+    }
+
+    /* Cover Slide Styling */
+    .cover-slide {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      height: 100%;
+    }
+
+    .cover-badge {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      padding: 6px 18px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .cover-title {
+      font-size: 3.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, var(--primary-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .cover-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 36px;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+
+    .cover-meta div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="presentation-container">
+    
+    <!-- Top Header Navigation Info -->
+    <header class="deck-header">
+      <div class="project-tag">
+        <i class="fa-solid fa-chart-pie"></i> Business Intelligence & Analytics Deck
+      </div>
+      <div class="slide-counter" id="slideCounter">Slide 1 of 5</div>
+    </header>
+
+    <!-- Main Content Presentation Slides -->
+    <main class="slides-wrapper">
+
+      <!-- SLIDE 1: COVER -->
+      <section class="slide active cover-slide" id="slide1">
+        <div class="cover-badge"><i class="fa-solid fa-utensils"></i> Restaurant Analytics Portfolio</div>
+        <h1 class="cover-title">Restaurant Sales &<br/>Order Dashboard</h1>
+        <p class="slide-subtitle" style="max-width: 620px; font-size: 1.1rem; line-height: 1.6;">
+          End-to-End Business Performance, Category Yields, Portfolio Optimization, and Peak-Hour Revenue Driver Analysis (Q1 2023).
+        </p>
+        <div class="cover-meta">
+          <div><i class="fa-solid fa-user-tie"></i> Senior Business Analyst</div>
+          <div><i class="fa-solid fa-calendar-days"></i> Jan 1 – Mar 31, 2023</div>
+          <div><i class="fa-solid fa-database"></i> 12,234 Order Records</div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: EXECUTIVE SUMMARY & KPIS -->
+      <section class="slide" id="slide2">
+        <h2 class="slide-title">Executive Summary & High-Level KPIs</h2>
+        <p class="slide-subtitle">Consolidated operational metrics across 3 months of customer transactions.</p>
+        
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Gross Revenue <i class="fa-solid fa-dollar-sign"></i></div>
+            <div class="kpi-value">$159.2K</div>
+            <div class="kpi-note"><i class="fa-solid fa-arrow-trend-up"></i> High Q1 baseline</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Total Orders <i class="fa-solid fa-receipt"></i></div>
+            <div class="kpi-value">5,370</div>
+            <div class="kpi-note">~59.7 orders / day</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Items Sold <i class="fa-solid fa-burger"></i></div>
+            <div class="kpi-value">12,097</div>
+            <div class="kpi-note">2.25 items / order</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Average Order Value <i class="fa-solid fa-wallet"></i></div>
+            <div class="kpi-value">$29.65</div>
+            <div class="kpi-note">$13.16 avg item price</div>
+          </div>
+        </div>
+
+        <div class="content-grid-2">
+          <div class="chart-box">
+            <h4><i class="fa-solid fa-calendar-line"></i> Monthly Revenue Trend (Q1 2023)</h4>
+            <div class="chart-canvas-wrapper">
+              <canvas id="monthlyChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <h4><i class="fa-solid fa-clock"></i> Peak Order Velocity (By Hour)</h4>
+            <div class="chart-canvas-wrapper">
+              <canvas id="peakHourChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: CUISINE & CATEGORY PERFORMANCE -->
+      <section class="slide" id="slide3">
+        <h2 class="slide-title">Category & Cuisine Breakdown</h2>
+        <p class="slide-subtitle">Evaluating high-yield premium items against volume-generating lines.</p>
+
+        <div class="content-grid-2">
+          <div class="chart-box">
+            <h4><i class="fa-solid fa-chart-pie"></i> Revenue Share by Cuisine</h4>
+            <div class="chart-canvas-wrapper">
+              <canvas id="categoryPieChart"></canvas>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Units Sold</th>
+                  <th>Revenue</th>
+                  <th>Rev Share</th>
+                  <th>Avg Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-primary">Italian</span></td>
+                  <td>2,948</td>
+                  <td><strong>$49,462.70</strong></td>
+                  <td>31.1%</td>
+                  <td>$16.78</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-success">Asian</span></td>
+                  <td>3,470</td>
+                  <td><strong>$46,720.65</strong></td>
+                  <td>29.3%</td>
+                  <td>$13.46</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-warning">Mexican</span></td>
+                  <td>2,945</td>
+                  <td><strong>$34,796.80</strong></td>
+                  <td>21.9%</td>
+                  <td>$11.82</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-danger">American</span></td>
+                  <td>2,734</td>
+                  <td><strong>$28,237.75</strong></td>
+                  <td>17.7%</td>
+                  <td>$10.33</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="padding: 16px 18px; font-size: 0.83rem; color: var(--text-sub); border-top: 1px solid var(--card-border);">
+              <strong>Key Finding:</strong> Italian leads total revenue with <strong>$49.5K</strong> despite having fewer unit sales than Asian, powered by a 24.6% higher average item price point ($16.78 vs $13.46).
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: MENU ITEM PERFORMANCE (TOP & BOTTOM) -->
+      <section class="slide" id="slide4">
+        <h2 class="slide-title">SKU Portfolio & Menu Engineering</h2>
+        <p class="slide-subtitle">Identifying flagship revenue anchors versus menu deadweight.</p>
+
+        <div class="content-grid-2">
+          <!-- Top 5 -->
+          <div class="data-table-container">
+            <div style="padding: 14px 18px; background: rgba(16, 185, 129, 0.08); border-bottom: 1px solid var(--card-border); font-weight: 600; color: #6ee7b7;">
+              <i class="fa-solid fa-crown"></i> Top 5 Revenue Drivers
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Units</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Korean Beef Bowl</strong></td>
+                  <td>Asian</td>
+                  <td>$17.95</td>
+                  <td>588</td>
+                  <td>$10,554.60</td>
+                </tr>
+                <tr>
+                  <td><strong>Spaghetti & Meatballs</strong></td>
+                  <td>Italian</td>
+                  <td>$17.95</td>
+                  <td>470</td>
+                  <td>$8,436.50</td>
+                </tr>
+                <tr>
+                  <td><strong>Tofu Pad Thai</strong></td>
+                  <td>Asian</td>
+                  <td>$14.50</td>
+                  <td>562</td>
+                  <td>$8,149.00</td>
+                </tr>
+                <tr>
+                  <td><strong>Cheeseburger</strong></td>
+                  <td>American</td>
+                  <td>$13.95</td>
+                  <td>583</td>
+                  <td>$8,132.85</td>
+                </tr>
+                <tr>
+                  <td><strong>Hamburger</strong></td>
+                  <td>American</td>
+                  <td>$12.95</td>
+                  <td>622</td>
+                  <td>$8,054.90</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Bottom 5 -->
+          <div class="data-table-container">
+            <div style="padding: 14px 18px; background: rgba(239, 68, 68, 0.08); border-bottom: 1px solid var(--card-border); font-weight: 600; color: #fca5a5;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Bottom 5 Revenue Drivers
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Units</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Chicken Tacos</td>
+                  <td>Mexican</td>
+                  <td>$11.95</td>
+                  <td>123</td>
+                  <td>$1,469.85</td>
+                </tr>
+                <tr>
+                  <td>Potstickers</td>
+                  <td>Asian</td>
+                  <td>$9.00</td>
+                  <td>205</td>
+                  <td>$1,845.00</td>
+                </tr>
+                <tr>
+                  <td>Chips & Guacamole</td>
+                  <td>Mexican</td>
+                  <td>$9.00</td>
+                  <td>237</td>
+                  <td>$2,133.00</td>
+                </tr>
+                <tr>
+                  <td>Hot Dog</td>
+                  <td>American</td>
+                  <td>$9.00</td>
+                  <td>257</td>
+                  <td>$2,313.00</td>
+                </tr>
+                <tr>
+                  <td>Cheese Quesadillas</td>
+                  <td>Mexican</td>
+                  <td>$10.50</td>
+                  <td>233</td>
+                  <td>$2,446.50</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: STRATEGIC RECOMMENDATIONS -->
+      <section class="slide" id="slide5">
+        <h2 class="slide-title">Actionable Strategic Recommendations</h2>
+        <p class="slide-subtitle">Business analyst roadmap to optimize margins, table turn, and portfolio profitability.</p>
+
+        <div>
+          <div class="insight-card">
+            <div class="insight-icon"><i class="fa-solid fa-utensils"></i></div>
+            <div class="insight-body">
+              <h5>1. Mexican Menu Revamp & SKU Rationalization</h5>
+              <p>Three out of the bottom five revenue items belong to the Mexican line (Chicken Tacos at only 123 sold). Re-engineer recipe appeal or replace underperforming items with high-margin combos to reduce waste and prep complexity.</p>
+            </div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="insight-body">
+              <h5>2. Dual-Peak Kitchen Staffing & Production Optimization</h5>
+              <p>Over 48% of gross daily revenue concentrates within two narrow 2-hour windows (12 PM – 2 PM lunch rush at $42.3K and 5 PM – 7 PM dinner rush at $34.7K). Shift prep shifts forward to 11:00 AM and 4:30 PM to avoid service bottlenecks.</p>
+            </div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            <div class="insight-body">
+              <h5>3. Bundle High-Volume Anchors to Expand AOV Beyond $29.65</h5>
+              <p>High-volume low-cost items like Hamburgers (622 units) and Edamame (620 units) are ordered regularly. Bundle them with high-margin Italian entrees or Asian specialty drinks to systematically nudge average ticket size toward $35.00+.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Action Controls -->
+    <footer class="deck-footer">
+      <div style="font-size: 0.85rem; color: var(--text-sub);">
+        Use <strong>←</strong> and <strong>→</strong> keys or buttons to navigate
+      </div>
+      <div class="nav-btn-group">
+        <button class="btn btn-secondary" id="prevBtn" onclick="changeSlide(-1)">
+          <i class="fa-solid fa-arrow-left"></i> Previous
+        </button>
+        <button class="btn btn-primary" id="nextBtn" onclick="changeSlide(1)">
+          Next <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 5;
+
+    function showSlide(slideIndex) {
+      document.querySelectorAll('.slide').forEach((slide) => {
+        slide.classList.remove('active');
+      });
+
+      const activeSlide = document.getElementById(`slide${slideIndex}`);
+      if (activeSlide) {
+        activeSlide.classList.add('active');
+      }
+
+      document.getElementById('slideCounter').innerText = `Slide ${slideIndex} of ${totalSlides}`;
+      document.getElementById('prevBtn').disabled = (slideIndex === 1);
+      document.getElementById('nextBtn').innerText = (slideIndex === totalSlides) ? 'Finish' : 'Next';
+    }
+
+    function changeSlide(direction) {
+      currentSlide += direction;
+      if (currentSlide < 1) currentSlide = 1;
+      if (currentSlide > totalSlides) currentSlide = 1; // loop or reset
+      showSlide(currentSlide);
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        changeSlide(1);
+      } else if (e.key === 'ArrowLeft') {
+        changeSlide(-1);
+      }
+    });
+
+    // Chart.js Visualizations Setup
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Monthly Revenue Chart
+      new Chart(document.getElementById('monthlyChart'), {
+        type: 'bar',
+        data: {
+          labels: ['January 2023', 'February 2023', 'March 2023'],
+          datasets: [{
+            label: 'Revenue ($)',
+            data: [53816.95, 50790.35, 54610.60],
+            backgroundColor: '#4f46e5',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#94a3b8', callback: (val) => '$' + (val/1000) + 'k' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8' }
+            }
+          }
+        }
+      });
+
+      // 2. Hourly Order Velocity Chart
+      new Chart(document.getElementById('peakHourChart'), {
+        type: 'line',
+        data: {
+          labels: ['10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM'],
+          datasets: [{
+            label: 'Orders',
+            data: [6, 337, 647, 595, 417, 362, 381, 623, 596, 498, 439, 321, 148],
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.12)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: '#06b6d4'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#94a3b8' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8' }
+            }
+          }
+        }
+      });
+
+      // 3. Category Pie Chart
+      new Chart(document.getElementById('categoryPieChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Italian', 'Asian', 'Mexican', 'American'],
+          datasets: [{
+            data: [49462.70, 46720.65, 34796.80, 28237.75],
+            backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#94a3b8', boxWidth: 12, padding: 16 }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    });
+  </script>
+</body>
+</html>
